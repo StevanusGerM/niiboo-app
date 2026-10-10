@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 import { BentoCard, Button, ButtonLink, HskBadge, ProgressBar, ProgressRing } from "@/components/ui";
+import { markNode, starsFor } from "@/lib/journey-store";
 import { speakZh, stopSpeaking } from "@/lib/speech";
 import { cn, formatTime, normalizeZh } from "@/lib/utils";
 import type { ExamQuestion } from "@/types/content";
@@ -148,6 +149,13 @@ export function MockTest({ level, sections, mode }: { level: number; sections: H
     const pct = totalQuestions ? Math.round((correct / totalQuestions) * 100) : 0;
     return { perSection, correct, pct, scaled: Math.round((pct / 100) * maxScore), passed: pct >= 60 };
   }, [answers, sections, totalQuestions, maxScore]);
+
+  // Report the result to the journey map (mock exam = boss node, practice = checkpoint).
+  useEffect(() => {
+    if (phase !== "result") return;
+    markNode(`${mode === "mock" ? "boss" : "practice"}-${level}`, starsFor(results.pct));
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- only when a run finishes
+  }, [phase]);
 
   if (!sections.length) {
     return (

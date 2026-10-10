@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ArrowLeft, BookmarkPlus, Check, Columns2, EyeOff, Gauge, Pause, Play, Rows2, Trash2, Volume2, X } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 import { BentoCard, Button, HskBadge } from "@/components/ui";
+import { markNode } from "@/lib/journey-store";
 import { isTtsSupported, speakZh, stopSpeaking } from "@/lib/speech";
 import { KEYS, readLocal, writeLocal } from "@/lib/storage";
 import { cn } from "@/lib/utils";
@@ -91,8 +92,9 @@ export function ParallelReader({ story }: { story: ParallelStory }) {
     if (!finished) {
       setFinished(true);
       recordActivity(15);
+      markNode(`story-${story.id}`, 3);
     }
-  }, [finished, recordActivity]);
+  }, [finished, recordActivity, story.id]);
 
   /* ---------------- TTS karaoke ---------------- */
   const speakFrom = useCallback(
@@ -178,7 +180,7 @@ export function ParallelReader({ story }: { story: ParallelStory }) {
   const progressPct = active < 0 ? 0 : Math.round(((active + 1) / pairs.length) * 100);
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,1fr)_320px] [&>*]:min-w-0">
       <div>
         {/* Header */}
         <div className="mb-4 flex items-center gap-3">

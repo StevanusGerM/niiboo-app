@@ -10,13 +10,15 @@
 
 | Module | Route | What it does |
 | --- | --- | --- |
+| **Welcome & Auth** | `/welcome`, `/login`, `/signup` | Kid-friendly entry flow with **Boo the panda** mascot (SVG, reacts to typing: waves, cheers, covers its eyes while you type a password, looks sad on errors). First-time visitors are routed to `/welcome` by middleware and choose *Daftar*, *Masuk*, or *Coba dulu* (guest mode via the `niibooo_guest` cookie). Chunky 3D buttons, friendly Indonesian error messages, responsive for phone and desktop. |
+| **Journey Map** | `/journey` | Game-style level map: 6 themed worlds (HSK 1–6) with a winding path of chunky nodes — lessons, stories, a Hanzi challenge, HSK practice and a timed **boss exam**. Nodes unlock in sequence (units below your HSK level are open), earn up to 3 ⭐, and Boo marks “you are here”. |
 | **Bento-Grid Dashboard** | `/` | Daily XP goal ring, streak tracker, HSK level progress, story of the day, word of the day (with TTS), mock-exam shortcut, AI tutor and expert booking cards, 7-day activity chart. |
 | **Adaptive Placement Test** | `/placement` | 12-item staircase test: a correct answer raises difficulty, a wrong one lowers it. Estimates HSK 1–6 (highest level with ≥50% accuracy) and saves it to `profiles.current_hsk_level`. |
-| **Structured Curriculum** | `/learn` | Lessons per HSK level with: Leitner-style **flashcards** (3D flip, score saved to `user_progress`), **Hanzi stroke-order** writing via `hanzi-writer` (watch + quiz modes on a 米字格 grid), and **speech practice** using the Web Speech API (`zh-CN`) with a Levenshtein-based pronunciation score. |
+| **Structured Curriculum** | `/learn` | Lessons per HSK level with: Leitner-style **flashcards** (3D flip, score saved to `user_progress`), **Hanzi writing in 3 stages** — *Lihat* (stroke-order animation), *Latihan* (traced over a shadow guide, order enforced by `hanzi-writer`) and *Tes* (blank pad, written from memory; only the **shape** is scored — order and direction are ignored, see `src/lib/hanzi-shape.ts`), and **speech practice** using the Web Speech API (`zh-CN`) with a Levenshtein-based pronunciation score. |
 | **Parallel Story Reader** | `/reader`, `/reader/[id]` | Mandarin ↔ Indonesian side-by-side / stacked / “test yourself” layouts, ruby pinyin, **karaoke highlighting** (sentence + word level) driven by timestamped audio (`audio_url` + `start/end`) or browser TTS fallback, speed control, **instant glossary** on every word, saved-vocabulary list. |
 | **HSK Prep** | `/hsk`, `/hsk/[level]/mock`, `/hsk/[level]/practice` | **Timed mock exams** (Listening / Reading / Writing, per-section timers, 2-play audio limit, question navigator, scaled score /200 or /300, pass mark 60%) and an untimed **practice bank** with instant feedback and detailed explanations. Writing includes tap-to-build sentence ordering. |
 | **AI Smart Tutor** | `/tutor`, `POST /api/tutor` | Scenario roleplay (introductions, restaurant, taxi, market bargaining). Accepts Hanzi, toneless pinyin, or tone numbers (`ni3 hao3`) and returns **tone corrections**, third-tone sandhi reminders, hints, and model answers. Voice input via speech recognition. |
-| **Human Expert Booking** | `/experts` | Teacher catalogue, weekday slot picker in WIB, token wallet, atomic booking/cancellation via Postgres RPC, status tracking, Zoom link shown once confirmed. |
+| **Human Expert Booking** | `/experts` | Laoshi Brigita Chuanes · 4 tokens / 50 min. Teacher catalogue (`src/data/experts.ts`), weekday slot picker in WIB, token wallet, atomic booking/cancellation via Postgres RPC, status tracking, Zoom link shown once confirmed. |
 
 ### Demo mode
 If Supabase env vars are missing, the app runs fully in **demo mode**: bundled sample content is served and progress, streaks, tokens and bookings live in `localStorage`. Add Supabase keys to switch to real accounts — no code changes needed.
@@ -37,7 +39,7 @@ Modern Neo-Pop × clean Bento grid.
 
 - Cards: `rounded-bento` (28px) / `rounded-bento-lg` (32px), `shadow-soft`, optional `shadow-glow` for primary actions.
 - Floating capsule navigation (`CapsuleNav`) fixed at the bottom; sticky top bar with streak & token pills.
-- Fonts: Plus Jakarta Sans (UI) + Noto Sans SC (Hanzi) via `next/font`.
+- Fonts: Nunito (rounded, kid-friendly UI) + Noto Sans SC (Hanzi) via `next/font`.
 - Primitives live in `src/components/ui/index.tsx` (`BentoCard`, `Button`, `ButtonLink`, `Badge`, `HskBadge`, `ProgressRing`, `ProgressBar`, `PageHeader`).
 
 ---
@@ -62,11 +64,15 @@ niibooo/
 │   │   ├── hsk/[level]/{mock,practice}/
 │   │   ├── tutor/              # AI tutor UI
 │   │   ├── experts/            # booking UI
-│   │   ├── login/              # Supabase email/password auth
+│   │   ├── (auth)/             # full-screen: welcome, login, signup
+│   │   ├── (app)/              # main app shell: TopBar + CapsuleNav
 │   │   ├── auth/callback/      # email confirmation code exchange
 │   │   └── api/tutor/route.ts  # tutor endpoint
 │   ├── components/
 │   │   ├── ui/                 # design-system primitives
+│   │   ├── mascot/             # Boo the panda + speech bubble
+│   │   ├── auth/               # WelcomeScreen, AuthForm, ChunkyButton
+│   │   ├── journey/            # JourneyMap
 │   │   ├── layout/             # TopBar, CapsuleNav
 │   │   ├── providers/          # UserProvider (profile, progress, streak, XP)
 │   │   ├── dashboard/          # BentoDashboard
@@ -82,6 +88,9 @@ niibooo/
 │   │   ├── data.ts             # server data access with sample-data fallback
 │   │   ├── bookings.ts         # booking service (RPC or localStorage)
 │   │   ├── tutor/              # scenarios + rule-based tutor engine
+│   │   ├── journey.ts          # builds units/nodes, unlock + star rules
+│   │   ├── journey-store.ts    # per-device node & Hanzi results
+│   │   ├── hanzi-shape.ts      # shape-only scoring for the free-hand test
 │   │   ├── speech.ts           # TTS, speech recognition, pronunciation scoring
 │   │   ├── pinyin.ts           # tone numbers ↔ marks
 │   │   └── storage.ts, utils.ts
@@ -149,6 +158,9 @@ Confirming a booking (admin side): update the row with the service role, for exa
 | `npm run build` / `npm start` | Production build / serve |
 | `npm run typecheck` | `tsc --noEmit` |
 | `npm run seed:generate` | Regenerate `supabase/seed.sql` from `src/data` |
+
+### Progress storage
+Lesson results go to `user_progress` (Supabase). Journey results for stories, HSK practice/boss exams and Hanzi tests are stored per device in `localStorage`.
 
 ### Browser support
 Speech recognition needs Chrome or Edge (desktop/Android). TTS works in all modern browsers; quality depends on the installed Chinese voice. Hanzi stroke data is loaded from the `hanzi-writer-data` CDN at runtime.

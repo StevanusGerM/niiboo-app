@@ -109,10 +109,10 @@ export function BookingPanel() {
   const upcoming = bookings.filter((b) => b.status !== "cancelled" && new Date(b.scheduled_time).getTime() > Date.now() - 3600_000);
 
   return (
-    <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
-      <div className="space-y-5">
+    <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_340px]">
+      <div className="min-w-0 space-y-5">
         {/* Experts */}
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className={cn("grid gap-3", experts.length > 1 && "sm:grid-cols-2")}>
           {experts.map((e) => {
             const active = e.name === expert.name;
             return (
@@ -123,37 +123,45 @@ export function BookingPanel() {
                   setSlot(null);
                 }}
                 className={cn(
-                  "rounded-bento p-5 text-left transition",
+                  "rounded-bento p-5 text-left transition sm:p-6",
                   active ? "bg-white shadow-soft ring-2 ring-blossom" : "bg-white/70 ring-1 ring-plum/5 hover:bg-white",
                 )}
               >
-                <div className="flex items-center gap-3">
-                  <span className={cn("grid h-14 w-14 shrink-0 place-items-center rounded-2xl bg-gradient-to-br text-xl font-extrabold text-white", e.color)}>
-                    {e.name.split(" ")[1]?.charAt(0)}
+                <div className="flex items-center gap-4">
+                  <span
+                    className={cn(
+                      "grid h-16 w-16 shrink-0 place-items-center rounded-3xl bg-gradient-to-br text-2xl font-black text-white shadow-chunky-pink",
+                      e.color,
+                    )}
+                  >
+                    {e.name.replace(/^Laoshi\s+/, "").charAt(0)}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate font-extrabold">{e.name}</p>
-                    <p className="truncate text-sm text-plum-soft">{e.title}</p>
+                    <p className="truncate text-lg font-black">{e.name}</p>
+                    <p className="truncate text-sm font-semibold text-plum-soft">{e.title}</p>
+                    {e.rating !== undefined && (
+                      <p className="mt-0.5 inline-flex items-center gap-1 text-sm font-bold">
+                        <Star className="h-4 w-4 text-peach" fill="#FFB385" /> {e.rating}
+                        {e.sessions !== undefined && ` · ${e.sessions.toLocaleString("id-ID")} sesi`}
+                      </p>
+                    )}
                   </div>
                 </div>
-                <div className="mt-3 flex flex-wrap gap-1.5">
+                <div className="mt-4 flex flex-wrap gap-1.5">
                   {e.specialties.map((s) => (
-                    <span key={s} className="rounded-full bg-cream px-2.5 py-1 text-xs font-semibold">
+                    <span key={s} className="rounded-full bg-cream px-3 py-1 text-xs font-bold">
                       {s}
                     </span>
                   ))}
                 </div>
-                <div className="mt-3 flex items-center justify-between text-sm font-bold">
-                  <span className="inline-flex items-center gap-1">
-                    <Star className="h-4 w-4 text-peach" fill="#FFB385" /> {e.rating} · {e.sessions.toLocaleString("id-ID")} sesi
+                <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-sm font-bold">
+                  <span className="flex items-center gap-1 text-plum-soft">
+                    <Languages className="h-4 w-4" /> {e.languages.join(" · ")}
                   </span>
-                  <span className="inline-flex items-center gap-1 text-blossom-dark">
-                    <Coins className="h-4 w-4" /> {e.tokenCost}
+                  <span className="inline-flex items-center gap-1 rounded-full bg-rose px-3 py-1 text-blossom-dark">
+                    <Coins className="h-4 w-4" /> {e.tokenCost} token / {e.duration} menit
                   </span>
                 </div>
-                <p className="mt-1 flex items-center gap-1 text-xs text-plum-soft">
-                  <Languages className="h-3 w-3" /> {e.languages.join(" · ")}
-                </p>
               </button>
             );
           })}
@@ -210,7 +218,7 @@ export function BookingPanel() {
       </div>
 
       {/* Summary & my bookings */}
-      <div className="space-y-4 lg:sticky lg:top-24 lg:self-start">
+      <div className="min-w-0 space-y-4 lg:sticky lg:top-24 lg:self-start">
         <BentoCard tone="plum">
           <p className="text-xs font-bold uppercase tracking-wider text-cream/60">Ringkasan</p>
           <p className="mt-2 text-lg font-extrabold">{expert.name}</p>
@@ -218,7 +226,7 @@ export function BookingPanel() {
             {slot ? fmt(slot, { weekday: "long", day: "numeric", month: "long", hour: "2-digit", minute: "2-digit" }) + " WIB" : "Pilih slot waktu"}
           </p>
           <div className="mt-4 flex items-center justify-between rounded-2xl bg-white/10 px-4 py-3 text-sm">
-            <span>Biaya · 50 menit</span>
+            <span>Biaya · {expert.duration} menit</span>
             <span className="inline-flex items-center gap-1 font-extrabold">
               <Coins className="h-4 w-4 text-peach" /> {expert.tokenCost} token
             </span>

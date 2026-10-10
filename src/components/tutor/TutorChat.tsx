@@ -89,7 +89,7 @@ export function TutorChat() {
         title="Roleplay & koreksi nada"
         description="Balas dalam Hanzi atau pinyin (boleh pakai angka nada, mis. ni3 hao3). Tutor akan mengoreksi nadamu dan memberi contoh jawaban."
       />
-      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[280px_minmax(0,1fr)] [&>*]:min-w-0">
         {/* Scenario picker */}
         <div className="scrollbar-none -mx-4 flex gap-3 overflow-x-auto px-4 lg:mx-0 lg:flex-col lg:overflow-visible lg:px-0">
           {scenarios.map((s) => (

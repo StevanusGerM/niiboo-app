@@ -7,27 +7,40 @@ import { BentoCard, PageHeader } from "@/components/ui";
 import { HSK_LEVELS, cn } from "@/lib/utils";
 import type { Lesson } from "@/types/database";
 import { Flashcards } from "./Flashcards";
-import { HanziWriterPad } from "./HanziWriterPad";
+import { HanziWriterPad, type WriteMode } from "./HanziWriterPad";
 import { SpeechPractice } from "./SpeechPractice";
 
-type Tab = "cards" | "write" | "speak";
+export type Tab = "cards" | "write" | "speak";
 const TABS: { key: Tab; label: string; icon: typeof Layers }[] = [
   { key: "cards", label: "Kartu kosakata", icon: Layers },
   { key: "write", label: "Tulis Hanzi", icon: PenTool },
   { key: "speak", label: "Latihan bicara", icon: Mic },
 ];
 
-export function LearnStudio({ lessons, initialLessonId }: { lessons: Lesson[]; initialLessonId?: string }) {
+export function LearnStudio({
+  lessons,
+  initialLessonId,
+  initialTab,
+  initialWriteMode,
+  initialLevel,
+}: {
+  lessons: Lesson[];
+  initialLessonId?: string;
+  initialTab?: Tab;
+  initialWriteMode?: WriteMode;
+  initialLevel?: number;
+}) {
   const { profile, progress, loading } = useUser();
   const initial = lessons.find((l) => l.id === initialLessonId);
-  const [level, setLevel] = useState<number>(initial?.hsk_level ?? profile.current_hsk_level);
+  const pinnedLevel = initial?.hsk_level ?? initialLevel;
+  const [level, setLevel] = useState<number>(pinnedLevel ?? profile.current_hsk_level);
   const [lessonId, setLessonId] = useState<string | undefined>(initial?.id);
-  const [tab, setTab] = useState<Tab>("cards");
+  const [tab, setTab] = useState<Tab>(initialTab ?? "cards");
 
-  // Once the profile loads, jump to the learner's level (unless a lesson was linked directly).
+  // Once the profile loads, jump to the learner's level (unless a lesson/level was linked directly).
   useEffect(() => {
-    if (!loading && !initial) setLevel(profile.current_hsk_level);
-  }, [loading, profile.current_hsk_level, initial]);
+    if (!loading && !pinnedLevel) setLevel(profile.current_hsk_level);
+  }, [loading, profile.current_hsk_level, pinnedLevel]);
 
   const levelLessons = lessons.filter((l) => l.hsk_level === level);
   const lesson = levelLessons.find((l) => l.id === lessonId) ?? levelLessons[0];
@@ -59,7 +72,7 @@ export function LearnStudio({ lessons, initialLessonId }: { lessons: Lesson[]; i
         ))}
       </div>
 
-      <div className="grid gap-5 lg:grid-cols-[280px_minmax(0,1fr)]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[280px_minmax(0,1fr)] [&>*]:min-w-0">
         {/* Lesson list */}
         <div className="space-y-3">
           {levelLessons.length === 0 && (
@@ -131,7 +144,7 @@ export function LearnStudio({ lessons, initialLessonId }: { lessons: Lesson[]; i
             </div>
 
             {tab === "cards" && <Flashcards key={lesson.id} lesson={lesson} />}
-            {tab === "write" && <HanziWriterPad key={lesson.id} vocab={lesson.content_json.vocab} />}
+            {tab === "write" && <HanziWriterPad key={lesson.id} vocab={lesson.content_json.vocab} initialMode={initialWriteMode} />}
             {tab === "speak" && <SpeechPractice key={lesson.id} vocab={lesson.content_json.vocab} />}
           </div>
         )}

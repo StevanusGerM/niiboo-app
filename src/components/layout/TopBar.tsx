@@ -1,12 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { Coins, Flame, LogIn, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Coins, Flame, LogOut, UserPlus } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
+import { clearGuest } from "@/lib/guest";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 
 export function TopBar() {
+  const router = useRouter();
   const { profile, isDemo, signOut } = useUser();
+
+  const leave = async () => {
+    if (!window.confirm("Keluar dari akunmu?")) return;
+    await signOut();
+    clearGuest();
+    router.replace("/welcome");
+    router.refresh();
+  };
   const initial = (profile.full_name ?? profile.username ?? "N").charAt(0).toUpperCase();
 
   return (
@@ -31,10 +42,11 @@ export function TopBar() {
           {isDemo ? (
             isSupabaseConfigured ? (
               <Link
-                href="/login"
-                className="inline-flex items-center gap-1 rounded-full bg-plum px-4 py-1.5 text-sm font-bold text-cream"
+                href="/signup"
+                title="Simpan progresmu dengan akun gratis"
+                className="inline-flex items-center gap-1 rounded-full bg-blossom px-4 py-1.5 text-sm font-extrabold text-white shadow-chunky-pink transition active:translate-y-[3px] active:shadow-none"
               >
-                <LogIn className="h-4 w-4" /> Masuk
+                <UserPlus className="h-4 w-4" /> Daftar
               </Link>
             ) : (
               <span
@@ -46,7 +58,7 @@ export function TopBar() {
             )
           ) : (
             <button
-              onClick={() => void signOut()}
+              onClick={() => void leave()}
               title="Keluar"
               className="group grid h-9 w-9 place-items-center rounded-full bg-plum font-bold text-cream"
             >

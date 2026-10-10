@@ -1,11 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Noto_Sans_SC, Plus_Jakarta_Sans } from "next/font/google";
-import { CapsuleNav } from "@/components/layout/CapsuleNav";
-import { TopBar } from "@/components/layout/TopBar";
+import { Noto_Sans_SC, Nunito } from "next/font/google";
 import { UserProvider } from "@/components/providers/UserProvider";
 import "./globals.css";
 
-const jakarta = Plus_Jakarta_Sans({ subsets: ["latin"], variable: "--font-jakarta", display: "swap" });
+const nunito = Nunito({ subsets: ["latin"], weight: ["400", "600", "700", "800", "900"], variable: "--font-sans", display: "swap" });
 const notoSC = Noto_Sans_SC({
   weight: ["400", "500", "700"],
   variable: "--font-noto-sc",
@@ -19,17 +17,13 @@ export const metadata: Metadata = {
     "Persiapan HSK 1–6, pembaca cerita paralel Mandarin–Indonesia, latihan menulis Hanzi, tutor AI, dan sesi live dengan pengajar.",
 };
 
-export const viewport: Viewport = { themeColor: "#FF6584" };
+export const viewport: Viewport = { themeColor: "#FF6584", width: "device-width", initialScale: 1, viewportFit: "cover" };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="id" className={`${jakarta.variable} ${notoSC.variable}`}>
+    <html lang="id" className={`${nunito.variable} ${notoSC.variable}`}>
       <body>
-        <UserProvider>
-          <TopBar />
-          <main className="mx-auto w-full max-w-6xl px-4 pb-36 pt-4 sm:px-6">{children}</main>
-          <CapsuleNav />
-        </UserProvider>
+        <UserProvider>{children}</UserProvider>
       </body>
     </html>
   );

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ArrowRight, BookOpenText, Bot, Coins, Compass, Flame, GraduationCap, Sparkles, Timer, Video, Volume2 } from "lucide-react";
+import { ArrowRight, BookOpenText, Bot, Coins, Compass, Flame, GraduationCap, Map as MapIcon, Sparkles, Timer, Video, Volume2 } from "lucide-react";
 import { dayKey, useUser } from "@/components/providers/UserProvider";
 import { BentoCard, ButtonLink, HskBadge, ProgressBar, ProgressRing } from "@/components/ui";
 import { speakZh } from "@/lib/speech";
@@ -71,9 +71,14 @@ export function BentoDashboard({ lessons, stories }: { lessons: Lesson[]; storie
                 <div className="min-w-0 flex-1">
                   <p className="text-xs font-bold uppercase tracking-wider text-white/75">Pelajaran berikutnya</p>
                   <p className="truncate text-xl font-extrabold">{nextLesson.title}</p>
-                  <ButtonLink href={`/learn?lesson=${nextLesson.id}`} variant="dark" className="mt-3">
-                    Lanjutkan <ArrowRight className="h-4 w-4" />
-                  </ButtonLink>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <ButtonLink href={`/learn?lesson=${nextLesson.id}`} variant="dark">
+                      Lanjutkan <ArrowRight className="h-4 w-4" />
+                    </ButtonLink>
+                    <ButtonLink href="/journey" variant="secondary">
+                      <MapIcon className="h-4 w-4" /> Peta
+                    </ButtonLink>
+                  </div>
                 </div>
               )}
             </div>
