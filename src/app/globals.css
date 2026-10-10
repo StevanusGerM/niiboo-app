@@ -1,0 +1,40 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-cream font-sans text-plum antialiased;
+  }
+  ::selection {
+    @apply bg-rose text-plum;
+  }
+}
+
+@layer components {
+  .hanzi {
+    @apply font-hanzi;
+  }
+  /* Decorative blob used in the bento cards */
+  .blob {
+    @apply pointer-events-none absolute rounded-full opacity-60 blur-2xl;
+  }
+  .chip {
+    @apply rounded-2xl bg-white px-3 py-2 font-hanzi text-lg font-semibold text-plum ring-1 ring-plum/10 transition hover:-translate-y-0.5 hover:ring-blossom active:scale-95;
+  }
+}
+
+@layer utilities {
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+}
