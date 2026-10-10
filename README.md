@@ -14,8 +14,9 @@
 | **Journey Map** | `/journey` | Game-style level map: 6 themed worlds (HSK 1–6) with a winding path of chunky nodes — lessons, stories, a Hanzi challenge, HSK practice and a timed **boss exam**. Nodes unlock in sequence (units below your HSK level are open), earn up to 3 ⭐, and Boo marks “you are here”. |
 | **Bento-Grid Dashboard** | `/` | Daily XP goal ring, streak tracker, HSK level progress, story of the day, word of the day (with TTS), mock-exam shortcut, AI tutor and expert booking cards, 7-day activity chart. |
 | **Adaptive Placement Test** | `/placement` | 12-item staircase test: a correct answer raises difficulty, a wrong one lowers it. Estimates HSK 1–6 (highest level with ≥50% accuracy) and saves it to `profiles.current_hsk_level`. |
-| **Structured Curriculum** | `/learn` | Lessons per HSK level with: Leitner-style **flashcards** (3D flip, score saved to `user_progress`), **Hanzi writing in 3 stages** — *Lihat* (stroke-order animation), *Latihan* (traced over a shadow guide, order enforced by `hanzi-writer`) and *Tes* (blank pad, written from memory; only the **shape** is scored — order and direction are ignored, see `src/lib/hanzi-shape.ts`), and **speech practice** using the Web Speech API (`zh-CN`) with a Levenshtein-based pronunciation score. |
-| **Parallel Story Reader** | `/reader`, `/reader/[id]` | Mandarin ↔ Indonesian side-by-side / stacked / “test yourself” layouts, ruby pinyin, **karaoke highlighting** (sentence + word level) driven by timestamped audio (`audio_url` + `start/end`) or browser TTS fallback, speed control, **instant glossary** on every word, saved-vocabulary list. |
+| **Practice Room** | `/practice` | Replay corner for everything already unlocked on the map: re-run a lesson's flashcards / Hanzi writing / speaking, or re-read stories from the library. Locked items point back to the map. (`/learn` and `/reader` without a target redirect here.) |
+| **Structured Curriculum** | `/learn?lesson=…` | Lessons per HSK level with: Leitner-style **flashcards** (3D flip, score saved to `user_progress`), **Hanzi writing in 3 stages** — *Lihat* (stroke-order animation), *Latihan* (traced over a shadow guide, order enforced by `hanzi-writer`) and *Tes* (blank pad, written from memory; only the **shape** is scored — order and direction are ignored, see `src/lib/hanzi-shape.ts`), and **speech practice** using the Web Speech API (`zh-CN`) with a Levenshtein-based pronunciation score. |
+| **Parallel Story Reader** | `/reader/[id]` | Mandarin ↔ Indonesian side-by-side / stacked / “test yourself” layouts, ruby pinyin, **karaoke highlighting** (sentence + word level) driven by timestamped audio (`audio_url` + `start/end`) or browser TTS fallback, speed control, **instant glossary** on every word, saved-vocabulary list. |
 | **HSK Prep** | `/hsk`, `/hsk/[level]/mock`, `/hsk/[level]/practice` | **Timed mock exams** (Listening / Reading / Writing, per-section timers, 2-play audio limit, question navigator, scaled score /200 or /300, pass mark 60%) and an untimed **practice bank** with instant feedback and detailed explanations. Writing includes tap-to-build sentence ordering. |
 | **AI Smart Tutor** | `/tutor`, `POST /api/tutor` | **Boo Laoshi** — open-ended chat on any topic powered by Claude (`claude-opus-5-5`), replying at the learner's HSK level with hanzi + pinyin + Indonesian, tone/grammar corrections, Indonesian explanations, and tappable reply suggestions. Optional roleplay starters (introductions, restaurant, taxi, market). Without `ANTHROPIC_API_KEY` it falls back to the rule-based roleplay simulation with tone checking. Voice input via speech recognition. |
 | **Human Expert Booking** | `/experts` | Laoshi Brigita Chuanes · 4 tokens / 50 min. Teacher catalogue (`src/data/experts.ts`), weekday slot picker in WIB, token wallet, atomic booking/cancellation via Postgres RPC, status tracking, Zoom link shown once confirmed. |
@@ -38,7 +39,7 @@ Modern Neo-Pop × clean Bento grid.
 | Background — Cream | `#F9F8F6` | `cream` |
 
 - Cards: `rounded-bento` (28px) / `rounded-bento-lg` (32px), `shadow-soft`, optional `shadow-glow` for primary actions.
-- Floating capsule navigation (`CapsuleNav`) fixed at the bottom; sticky top bar with streak & token pills.
+- Floating capsule navigation (`CapsuleNav`) fixed at the bottom with 5 tabs — Beranda · Peta · Tutor AI · HSK · Pakar (lessons, stories and the practice room sit under *Peta*); sticky top bar with streak & token pills.
 - Fonts: Nunito (rounded, kid-friendly UI) + Noto Sans SC (Hanzi) via `next/font`.
 - Supporting palette for categories and rewards: **mint** `#3CCFA4` (success, Hanzi), **ocean** `#5AB4F5` (listening, practice), **lilac** `#A78BFA` (reading, stories), **sunny** `#FFC94A` (stars, XP) — each with `-light`/`-dark` shades and a `shadow-chunky-*`.
 - Cartoons: **Boo** the panda (`mascot/Boo.tsx`, 6 moods), **Xiao Long** the little dragon and 12 kawaii stickers (`mascot/Stickers.tsx`), and `BooWith` (Boo holding a prop).
@@ -75,6 +76,7 @@ niibooo/
 │   │   ├── mascot/             # Boo the panda + speech bubble
 │   │   ├── auth/               # WelcomeScreen, AuthForm, ChunkyButton
 │   │   ├── journey/            # JourneyMap
+│   │   ├── practice/           # PracticeRoom
 │   │   ├── layout/             # TopBar, CapsuleNav
 │   │   ├── providers/          # UserProvider (profile, progress, streak, XP)
 │   │   ├── dashboard/          # BentoDashboard
@@ -92,6 +94,7 @@ niibooo/
 │   │   ├── tutor/              # scenarios + rule-based tutor engine
 │   │   ├── journey.ts          # builds units/nodes, unlock + star rules
 │   │   ├── journey-store.ts    # per-device node & Hanzi results
+│   │   ├── use-journey.ts      # shared unlock/star state hook
 │   │   ├── hanzi-shape.ts      # shape-only scoring for the free-hand test
 │   │   ├── speech.ts           # TTS, speech recognition, pronunciation scoring
 │   │   ├── pinyin.ts           # tone numbers ↔ marks

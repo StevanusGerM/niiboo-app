@@ -1,14 +1,14 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
-import { BookOpen, Check, Crown, Dumbbell, Headphones, Lock, PenTool, Play, Star, Trophy } from "lucide-react";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { BookOpen, Check, Crown, Dumbbell, Headphones, Library, Lock, PenTool, Play, Star, Trophy } from "lucide-react";
 import { ChunkyButton, ChunkyLink } from "@/components/auth/ChunkyButton";
 import { Boo, SpeechBubble } from "@/components/mascot/Boo";
 import { Dragon, Sticker, type StickerName } from "@/components/mascot/Stickers";
 import { useUser } from "@/components/providers/UserProvider";
 import { ProgressBar } from "@/components/ui";
-import { resolveStates, type JourneyNode, type JourneyUnit, type NodeKind, type NodeState } from "@/lib/journey";
-import { HANZI_PASS, JOURNEY_EVENT, readHanzi, readNodes, type HanziRecord, type NodeRecord } from "@/lib/journey-store";
+import type { JourneyNode, JourneyUnit, NodeKind, NodeState } from "@/lib/journey";
+import { useJourney } from "@/lib/use-journey";
 import { cn } from "@/lib/utils";
 
 /** Each node kind gets its own colour from the supporting palette. */
@@ -36,31 +36,11 @@ const OFFSETS = [0, 52, 80, 52, 0, -52, -80, -52];
 const BOO_LINES = ["Ayo lanjut!", "Kamu pasti bisa!", "加油！", "Sedikit lagi!"];
 
 export function JourneyMap({ units }: { units: JourneyUnit[] }) {
-  const { profile, progress, loading } = useUser();
-  const [nodes, setNodes] = useState<Record<string, NodeRecord>>({});
-  const [hanzi, setHanzi] = useState<Record<string, HanziRecord>>({});
+  const { loading } = useUser();
+  const { states } = useJourney(units);
   const [selected, setSelected] = useState<string | null>(null);
   const currentRef = useRef<HTMLDivElement>(null);
   const scrolled = useRef(false);
-
-  useEffect(() => {
-    const sync = () => {
-      setNodes(readNodes());
-      setHanzi(readHanzi());
-    };
-    sync();
-    window.addEventListener(JOURNEY_EVENT, sync);
-    window.addEventListener("storage", sync);
-    return () => {
-      window.removeEventListener(JOURNEY_EVENT, sync);
-      window.removeEventListener("storage", sync);
-    };
-  }, []);
-
-  const states = useMemo(
-    () => resolveStates(units, { currentLevel: profile.current_hsk_level, progress, nodes, hanzi, hanziPass: HANZI_PASS }),
-    [units, profile.current_hsk_level, progress, nodes, hanzi],
-  );
 
   const all = units.flatMap((u) => u.nodes);
   const earned = all.reduce((n, node) => n + (states[node.id]?.stars ?? 0), 0);
@@ -115,6 +95,9 @@ export function JourneyMap({ units }: { units: JourneyUnit[] }) {
             <Play className="h-5 w-5" fill="white" /> Lanjutkan petualangan
           </ChunkyButton>
         )}
+        <ChunkyLink href="/practice" tone="white" className="relative mt-3 py-3">
+          <Library className="h-5 w-5" /> Ruang Latihan
+        </ChunkyLink>
       </div>
 
       {units.map((unit) => {

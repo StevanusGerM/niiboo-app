@@ -1,11 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { CheckCircle2, Layers, Lightbulb, Mic, PenTool } from "lucide-react";
+import Link from "next/link";
+import { useState } from "react";
+import { ArrowLeft, CheckCircle2, Layers, Library, Lightbulb, Lock, Mic, PenTool } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
 import { BooWith } from "@/components/mascot/BooWith";
 import { BentoCard, PageHeader } from "@/components/ui";
-import { HSK_LEVELS, cn } from "@/lib/utils";
+import type { JourneyUnit } from "@/lib/journey";
+import { useJourney } from "@/lib/use-journey";
+import { cn } from "@/lib/utils";
 import type { Lesson } from "@/types/database";
 import { Flashcards } from "./Flashcards";
 import { HanziWriterPad, type WriteMode } from "./HanziWriterPad";
@@ -18,95 +21,79 @@ const TABS: { key: Tab; label: string; icon: typeof Layers }[] = [
   { key: "speak", label: "Latihan bicara", icon: Mic },
 ];
 
+/** Lesson screen, opened from a journey node or the practice room. */
 export function LearnStudio({
   lessons,
-  initialLessonId,
+  units,
+  lessonId: initialLessonId,
   initialTab,
   initialWriteMode,
-  initialLevel,
 }: {
   lessons: Lesson[];
-  initialLessonId?: string;
+  units: JourneyUnit[];
+  lessonId: string;
   initialTab?: Tab;
   initialWriteMode?: WriteMode;
-  initialLevel?: number;
 }) {
-  const { profile, progress, loading } = useUser();
-  const initial = lessons.find((l) => l.id === initialLessonId);
-  const pinnedLevel = initial?.hsk_level ?? initialLevel;
-  const [level, setLevel] = useState<number>(pinnedLevel ?? profile.current_hsk_level);
-  const [lessonId, setLessonId] = useState<string | undefined>(initial?.id);
+  const { progress } = useUser();
+  const { states } = useJourney(units);
+  const [lessonId, setLessonId] = useState(initialLessonId);
   const [tab, setTab] = useState<Tab>(initialTab ?? "cards");
 
-  // Once the profile loads, jump to the learner's level (unless a lesson/level was linked directly).
-  useEffect(() => {
-    if (!loading && !pinnedLevel) setLevel(profile.current_hsk_level);
-  }, [loading, profile.current_hsk_level, pinnedLevel]);
-
-  const levelLessons = lessons.filter((l) => l.hsk_level === level);
-  const lesson = levelLessons.find((l) => l.id === lessonId) ?? levelLessons[0];
+  const lesson = lessons.find((l) => l.id === lessonId) ?? lessons[0];
+  const levelLessons = lessons.filter((l) => l.hsk_level === lesson.hsk_level);
 
   return (
     <>
+      <div className="mb-4 flex flex-wrap gap-2">
+        <Link href="/journey" className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-sm font-extrabold text-plum shadow-chunky-white">
+          <ArrowLeft className="h-4 w-4" /> Peta
+        </Link>
+        <Link href="/practice" className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1.5 text-sm font-extrabold text-plum shadow-chunky-white">
+          <Library className="h-4 w-4" /> Ruang Latihan
+        </Link>
+      </div>
       <PageHeader
-        eyebrow="Kurikulum terstruktur"
-        title="Pelajaran harian"
+        eyebrow={`HSK ${lesson.hsk_level} · Pelajaran`}
+        title={lesson.title}
         description="Hafalkan kosakata, kuasai urutan goresan, dan latih pelafalan dengan pengenalan suara."
         illustration={<BooWith prop="pencil" mood="happy" size={110} />}
       />
 
-      {/* Level switcher */}
-      <div className="scrollbar-none -mx-4 mb-5 flex gap-2 overflow-x-auto px-4">
-        {HSK_LEVELS.map((l) => (
-          <button
-            key={l}
-            onClick={() => {
-              setLevel(l);
-              setLessonId(undefined);
-            }}
-            className={cn(
-              "shrink-0 rounded-full px-5 py-2 text-sm font-extrabold transition",
-              l === level ? "bg-plum text-cream" : "bg-white text-plum-soft ring-1 ring-plum/10 hover:text-plum",
-            )}
-          >
-            HSK {l}
-          </button>
-        ))}
-      </div>
-
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[280px_minmax(0,1fr)] [&>*]:min-w-0">
-        {/* Lesson list */}
+        {/* Lessons in this level — locked ones open via the map */}
         <div className="space-y-3">
-          {levelLessons.length === 0 && (
-            <BentoCard>
-              <p className="text-sm text-plum-soft">Belum ada pelajaran untuk HSK {level}.</p>
-            </BentoCard>
-          )}
           {levelLessons.map((l, i) => {
             const done = progress[l.id]?.is_completed;
-            const activeLesson = l.id === lesson?.id;
+            const open = l.id === lesson.id || !!states[`lesson-${l.id}`]?.unlocked;
+            const active = l.id === lesson.id;
             return (
               <button
                 key={l.id}
-                onClick={() => setLessonId(l.id)}
+                onClick={() => open && setLessonId(l.id)}
+                disabled={!open}
                 className={cn(
                   "flex w-full items-center gap-3 rounded-3xl p-4 text-left transition",
-                  activeLesson ? "bg-blossom text-white shadow-glow" : "bg-white shadow-soft hover:-translate-y-0.5",
+                  active
+                    ? "bg-blossom text-white shadow-glow"
+                    : open
+                      ? "bg-white shadow-soft hover:-translate-y-0.5"
+                      : "cursor-not-allowed bg-white/50 text-plum/40",
                 )}
               >
                 <span
                   className={cn(
                     "grid h-10 w-10 shrink-0 place-items-center rounded-2xl text-sm font-extrabold",
-                    activeLesson ? "bg-white/25" : "bg-rose text-blossom-dark",
+                    active ? "bg-white/25" : open ? "bg-rose text-blossom-dark" : "bg-plum/5",
                   )}
                 >
-                  {done ? <CheckCircle2 className="h-5 w-5" /> : i + 1}
+                  {!open ? <Lock className="h-4 w-4" /> : done ? <CheckCircle2 className="h-5 w-5" /> : i + 1}
                 </span>
                 <span className="min-w-0">
                   <span className="block truncate font-extrabold">{l.title}</span>
-                  <span className={cn("text-xs font-semibold", activeLesson ? "text-white/80" : "text-plum-soft")}>
-                    {l.content_json.vocab.length} kata
-                    {done && ` · skor ${progress[l.id]?.score ?? 0}`}
+                  <span className={cn("text-xs font-semibold", active ? "text-white/80" : "text-plum-soft")}>
+                    {open ? `${l.content_json.vocab.length} kata` : "Buka lewat Peta"}
+                    {open && done && ` · skor ${progress[l.id]?.score ?? 0}`}
                   </span>
                 </span>
               </button>
@@ -114,42 +101,38 @@ export function LearnStudio({
           })}
         </div>
 
-        {/* Lesson workspace */}
-        {lesson && (
-          <div className="min-w-0 space-y-4">
-            <BentoCard tone="rose">
-              <p className="text-xs font-bold uppercase tracking-wider text-blossom-dark">{lesson.category}</p>
-              <h2 className="text-2xl font-extrabold">{lesson.title}</h2>
-              <p className="mt-1 text-plum-soft">{lesson.content_json.intro}</p>
-              {lesson.content_json.grammar_tip && (
-                <p className="mt-3 flex gap-2 rounded-2xl bg-white/70 p-3 text-sm">
-                  <Lightbulb className="h-4 w-4 shrink-0 text-peach" />
-                  {lesson.content_json.grammar_tip}
-                </p>
-              )}
-            </BentoCard>
+        <div className="min-w-0 space-y-4">
+          <BentoCard tone="rose">
+            <p className="text-xs font-bold uppercase tracking-wider text-blossom-dark">{lesson.category}</p>
+            <p className="mt-1 text-plum-soft">{lesson.content_json.intro}</p>
+            {lesson.content_json.grammar_tip && (
+              <p className="mt-3 flex gap-2 rounded-2xl bg-white/70 p-3 text-sm">
+                <Lightbulb className="h-4 w-4 shrink-0 text-peach" />
+                {lesson.content_json.grammar_tip}
+              </p>
+            )}
+          </BentoCard>
 
-            <div className="flex gap-1 rounded-full bg-white p-1 shadow-soft">
-              {TABS.map(({ key, label, icon: Icon }) => (
-                <button
-                  key={key}
-                  onClick={() => setTab(key)}
-                  className={cn(
-                    "flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-2.5 text-sm font-bold transition",
-                    tab === key ? "bg-plum text-cream" : "text-plum-soft hover:text-plum",
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  <span className="hidden sm:inline">{label}</span>
-                </button>
-              ))}
-            </div>
-
-            {tab === "cards" && <Flashcards key={lesson.id} lesson={lesson} />}
-            {tab === "write" && <HanziWriterPad key={lesson.id} vocab={lesson.content_json.vocab} initialMode={initialWriteMode} />}
-            {tab === "speak" && <SpeechPractice key={lesson.id} vocab={lesson.content_json.vocab} />}
+          <div className="flex gap-1 rounded-full bg-white p-1 shadow-soft">
+            {TABS.map(({ key, label, icon: Icon }) => (
+              <button
+                key={key}
+                onClick={() => setTab(key)}
+                className={cn(
+                  "flex flex-1 items-center justify-center gap-2 rounded-full px-3 py-2.5 text-sm font-bold transition",
+                  tab === key ? "bg-plum text-cream" : "text-plum-soft hover:text-plum",
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                <span className="hidden sm:inline">{label}</span>
+              </button>
+            ))}
           </div>
-        )}
+
+          {tab === "cards" && <Flashcards key={lesson.id} lesson={lesson} />}
+          {tab === "write" && <HanziWriterPad key={lesson.id} vocab={lesson.content_json.vocab} initialMode={initialWriteMode} />}
+          {tab === "speak" && <SpeechPractice key={lesson.id} vocab={lesson.content_json.vocab} />}
+        </div>
       </div>
     </>
   );

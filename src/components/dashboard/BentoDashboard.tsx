@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useMemo } from "react";
-import { ArrowRight, Coins, Compass, Flame, Map as MapIcon, Sparkles, Timer, Volume2 } from "lucide-react";
+import { ArrowRight, Coins, Compass, Flame, Library, Map as MapIcon, Sparkles, Timer, Volume2 } from "lucide-react";
 import { Boo } from "@/components/mascot/Boo";
 import { BooWith } from "@/components/mascot/BooWith";
 import { Dragon, Sticker } from "@/components/mascot/Stickers";
@@ -83,6 +83,9 @@ export function BentoDashboard({ lessons, stories }: { lessons: Lesson[]; storie
                     </ButtonLink>
                     <ButtonLink href="/journey" variant="secondary">
                       <MapIcon className="h-4 w-4" /> Peta
+                    </ButtonLink>
+                    <ButtonLink href="/practice" variant="secondary">
+                      <Library className="h-4 w-4" /> Latihan
                     </ButtonLink>
                   </div>
                 </div>

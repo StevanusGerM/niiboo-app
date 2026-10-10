@@ -184,7 +184,7 @@ export function ParallelReader({ story }: { story: ParallelStory }) {
       <div>
         {/* Header */}
         <div className="mb-4 flex items-center gap-3">
-          <Link href="/reader" className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-soft" aria-label="Kembali">
+          <Link href="/practice?tab=stories" className="grid h-10 w-10 place-items-center rounded-full bg-white shadow-soft" aria-label="Kembali ke perpustakaan cerita">
             <ArrowLeft className="h-5 w-5" />
           </Link>
           <HskBadge level={story.hsk_level} />

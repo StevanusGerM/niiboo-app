@@ -23,7 +23,16 @@ export function BooWith({
   // the inner one is the positioning context for the prop sticker.
   return (
     <div className={cn("inline-block", float && "animate-float", className)}>
-      <div className="relative" style={{ width: size, height: (size * 220) / 200 }}>
+      <div
+        className="relative"
+        // Reserve room for the prop that pokes out beside Boo so it never overflows the page.
+        style={{
+          width: size,
+          height: (size * 220) / 200,
+          marginRight: side === "right" ? Math.round(size * 0.16) : undefined,
+          marginLeft: side === "left" ? Math.round(size * 0.16) : undefined,
+        }}
+      >
         <Boo mood={mood} size={size} />
         <Sticker
           name={prop}
