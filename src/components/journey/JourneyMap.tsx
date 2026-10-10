@@ -4,18 +4,30 @@ import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import { BookOpen, Check, Crown, Dumbbell, Headphones, Lock, PenTool, Play, Star, Trophy } from "lucide-react";
 import { ChunkyButton, ChunkyLink } from "@/components/auth/ChunkyButton";
 import { Boo, SpeechBubble } from "@/components/mascot/Boo";
+import { Dragon, Sticker, type StickerName } from "@/components/mascot/Stickers";
 import { useUser } from "@/components/providers/UserProvider";
 import { ProgressBar } from "@/components/ui";
 import { resolveStates, type JourneyNode, type JourneyUnit, type NodeKind, type NodeState } from "@/lib/journey";
 import { HANZI_PASS, JOURNEY_EVENT, readHanzi, readNodes, type HanziRecord, type NodeRecord } from "@/lib/journey-store";
 import { cn } from "@/lib/utils";
 
-const KIND: Record<NodeKind, { label: string; icon: typeof BookOpen }> = {
-  lesson: { label: "Pelajaran", icon: BookOpen },
-  story: { label: "Cerita", icon: Headphones },
-  hanzi: { label: "Tulis Hanzi", icon: PenTool },
-  practice: { label: "Latihan", icon: Dumbbell },
-  boss: { label: "Ujian Bos", icon: Crown },
+/** Each node kind gets its own colour from the supporting palette. */
+const KIND: Record<NodeKind, { label: string; icon: typeof BookOpen; on: string; chip: string }> = {
+  lesson: { label: "Pelajaran", icon: BookOpen, on: "bg-blossom text-white shadow-[0_6px_0_0_#D9435F]", chip: "bg-rose text-blossom-dark" },
+  story: { label: "Cerita", icon: Headphones, on: "bg-lilac text-white shadow-[0_6px_0_0_#7C5CE8]", chip: "bg-lilac-light text-lilac-dark" },
+  hanzi: { label: "Tulis Hanzi", icon: PenTool, on: "bg-mint text-white shadow-[0_6px_0_0_#22A882]", chip: "bg-mint-light text-mint-dark" },
+  practice: { label: "Latihan", icon: Dumbbell, on: "bg-ocean text-white shadow-[0_6px_0_0_#2F8FD6]", chip: "bg-ocean-light text-ocean-dark" },
+  boss: { label: "Ujian Bos", icon: Crown, on: "bg-sunny text-plum shadow-[0_6px_0_0_#E9A825]", chip: "bg-sunny-light text-[#9A6B00]" },
+};
+
+/** Decorative stickers per world, scattered along the path. */
+const WORLD_STICKERS: Record<number, StickerName[]> = {
+  1: ["bamboo", "baozi", "cloud"],
+  2: ["lantern", "tea", "star"],
+  3: ["cloud", "book", "lantern"],
+  4: ["headphones", "star", "sparkle"],
+  5: ["cloud", "bamboo", "tea"],
+  6: ["lantern", "sparkle", "trophy"],
 };
 
 /** Horizontal zig-zag offsets (px) that give the path its winding look. */
@@ -82,7 +94,7 @@ export function JourneyMap({ units }: { units: JourneyUnit[] }) {
             <h1 className="text-2xl font-black leading-tight sm:text-3xl">Peta Belajarmu</h1>
             <div className="mt-2 flex flex-wrap items-center gap-2 text-sm font-extrabold">
               <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1">
-                <Star className="h-4 w-4 text-peach" fill="#FFB385" /> {earned}/{all.length * 3}
+                <Star className="h-4 w-4 text-sunny" fill="#FFC94A" /> {earned}/{all.length * 3}
               </span>
               <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-3 py-1">
                 <Trophy className="h-4 w-4 text-peach" /> {done}/{all.length} langkah
@@ -140,7 +152,24 @@ export function JourneyMap({ units }: { units: JourneyUnit[] }) {
             </div>
 
             {/* Winding path */}
-            <div className="flex flex-col items-center gap-6 pb-2 pt-8">
+            <div className="relative flex flex-col items-center gap-6 pb-2 pt-8">
+              {/* scenery */}
+              {WORLD_STICKERS[unit.level]?.map((name, k) => (
+                <Sticker
+                  key={name + k}
+                  name={name}
+                  size={k === 1 ? 52 : 64}
+                  float
+                  rotate={k % 2 ? 10 : -8}
+                  className={cn(
+                    "pointer-events-none absolute opacity-90",
+                    unitLocked && "opacity-40 grayscale",
+                    k === 0 && "left-0 top-[12%]",
+                    k === 1 && "right-0 top-[42%]",
+                    k === 2 && "bottom-[12%] left-2",
+                  )}
+                />
+              ))}
               {unit.nodes.map((node, i) => {
                 const st = states[node.id];
                 const offset = OFFSETS[i % OFFSETS.length];
@@ -163,6 +192,17 @@ export function JourneyMap({ units }: { units: JourneyUnit[] }) {
                       <NodeButton node={node} state={st} current={isCurrent} onClick={() => setSelected(open ? null : node.id)} />
                       {st?.completed && <Stars count={st.stars} />}
 
+                      {node.kind === "boss" && !isCurrent && (
+                        <div
+                          className={cn(
+                            "pointer-events-none absolute top-1/2 -translate-y-1/2",
+                            offset > 0 ? "right-full mr-3" : "left-full ml-3",
+                            !st?.unlocked && "opacity-50 grayscale",
+                          )}
+                        >
+                          <Dragon size={70} mood={st?.completed ? "happy" : "fierce"} float />
+                        </div>
+                      )}
                       {isCurrent && (
                         <div
                           className={cn(
@@ -211,10 +251,10 @@ function NodeButton({
     ? "bg-[#E9E6EA] text-plum/30 shadow-[0_6px_0_0_#D3CFD6]"
     : boss
       ? state.completed
-        ? "bg-peach text-white shadow-[0_6px_0_0_#E08E5E]"
+        ? KIND.boss.on
         : "bg-plum text-peach shadow-chunky-plum"
       : state.completed || current
-        ? "bg-blossom text-white shadow-[0_6px_0_0_#D9435F]"
+        ? KIND[node.kind].on
         : "border-4 border-rose bg-white text-blossom shadow-[0_6px_0_0_rgba(43,45,66,0.15)]";
 
   return (
@@ -240,7 +280,7 @@ function Stars({ count }: { count: number }) {
       {[1, 2, 3].map((n) => (
         <Star
           key={n}
-          className={cn("h-4 w-4", n === 2 && "-translate-y-1", n <= count ? "text-peach" : "text-plum/15")}
+          className={cn("h-4 w-4", n === 2 && "-translate-y-1", n <= count ? "text-sunny" : "text-plum/15")}
           fill="currentColor"
         />
       ))}
@@ -253,7 +293,7 @@ function NodeCard({ node, state, onClose }: { node: JourneyNode; state?: NodeSta
   return (
     <div className="w-[min(340px,92vw)] animate-bubble-in rounded-[28px] border-2 border-plum/10 bg-white p-5 shadow-chunky-white">
       <div className="flex items-start justify-between gap-3">
-        <span className="inline-flex items-center gap-1 rounded-full bg-rose px-3 py-1 text-xs font-black uppercase tracking-wide text-blossom-dark">
+        <span className={cn("inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-black uppercase tracking-wide", meta.chip)}>
           <meta.icon className="h-3.5 w-3.5" /> {meta.label}
         </span>
         <button onClick={onClose} className="text-sm font-black text-plum-soft hover:text-plum" aria-label="Tutup">

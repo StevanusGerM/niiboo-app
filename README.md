@@ -17,7 +17,7 @@
 | **Structured Curriculum** | `/learn` | Lessons per HSK level with: Leitner-style **flashcards** (3D flip, score saved to `user_progress`), **Hanzi writing in 3 stages** — *Lihat* (stroke-order animation), *Latihan* (traced over a shadow guide, order enforced by `hanzi-writer`) and *Tes* (blank pad, written from memory; only the **shape** is scored — order and direction are ignored, see `src/lib/hanzi-shape.ts`), and **speech practice** using the Web Speech API (`zh-CN`) with a Levenshtein-based pronunciation score. |
 | **Parallel Story Reader** | `/reader`, `/reader/[id]` | Mandarin ↔ Indonesian side-by-side / stacked / “test yourself” layouts, ruby pinyin, **karaoke highlighting** (sentence + word level) driven by timestamped audio (`audio_url` + `start/end`) or browser TTS fallback, speed control, **instant glossary** on every word, saved-vocabulary list. |
 | **HSK Prep** | `/hsk`, `/hsk/[level]/mock`, `/hsk/[level]/practice` | **Timed mock exams** (Listening / Reading / Writing, per-section timers, 2-play audio limit, question navigator, scaled score /200 or /300, pass mark 60%) and an untimed **practice bank** with instant feedback and detailed explanations. Writing includes tap-to-build sentence ordering. |
-| **AI Smart Tutor** | `/tutor`, `POST /api/tutor` | Scenario roleplay (introductions, restaurant, taxi, market bargaining). Accepts Hanzi, toneless pinyin, or tone numbers (`ni3 hao3`) and returns **tone corrections**, third-tone sandhi reminders, hints, and model answers. Voice input via speech recognition. |
+| **AI Smart Tutor** | `/tutor`, `POST /api/tutor` | **Boo Laoshi** — open-ended chat on any topic powered by Claude (`claude-opus-5-5`), replying at the learner's HSK level with hanzi + pinyin + Indonesian, tone/grammar corrections, Indonesian explanations, and tappable reply suggestions. Optional roleplay starters (introductions, restaurant, taxi, market). Without `ANTHROPIC_API_KEY` it falls back to the rule-based roleplay simulation with tone checking. Voice input via speech recognition. |
 | **Human Expert Booking** | `/experts` | Laoshi Brigita Chuanes · 4 tokens / 50 min. Teacher catalogue (`src/data/experts.ts`), weekday slot picker in WIB, token wallet, atomic booking/cancellation via Postgres RPC, status tracking, Zoom link shown once confirmed. |
 
 ### Demo mode
@@ -40,6 +40,8 @@ Modern Neo-Pop × clean Bento grid.
 - Cards: `rounded-bento` (28px) / `rounded-bento-lg` (32px), `shadow-soft`, optional `shadow-glow` for primary actions.
 - Floating capsule navigation (`CapsuleNav`) fixed at the bottom; sticky top bar with streak & token pills.
 - Fonts: Nunito (rounded, kid-friendly UI) + Noto Sans SC (Hanzi) via `next/font`.
+- Supporting palette for categories and rewards: **mint** `#3CCFA4` (success, Hanzi), **ocean** `#5AB4F5` (listening, practice), **lilac** `#A78BFA` (reading, stories), **sunny** `#FFC94A` (stars, XP) — each with `-light`/`-dark` shades and a `shadow-chunky-*`.
+- Cartoons: **Boo** the panda (`mascot/Boo.tsx`, 6 moods), **Xiao Long** the little dragon and 12 kawaii stickers (`mascot/Stickers.tsx`), and `BooWith` (Boo holding a prop).
 - Primitives live in `src/components/ui/index.tsx` (`BentoCard`, `Button`, `ButtonLink`, `Badge`, `HskBadge`, `ProgressRing`, `ProgressBar`, `PageHeader`).
 
 ---
@@ -167,12 +169,15 @@ Speech recognition needs Chrome or Edge (desktop/Android). TTS works in all mode
 
 ---
 
-## 🤖 Upgrading the AI tutor to a real LLM
+## 🤖 AI tutor (Claude)
 
-The tutor is a deterministic, rule-based simulation (`src/lib/tutor/engine.ts`). To use an LLM:
-1. Add `ANTHROPIC_API_KEY` to `.env.local`.
-2. Replace the body of `generateTutorReply` with a model call that receives the scenario, step and learner message and returns JSON matching `TutorResponse` (`reply`, `feedback`, `nextStep`, `done`).
-3. The UI and `/api/tutor` contract stay unchanged.
+`src/lib/tutor/ai.ts` calls the Claude Messages API with structured JSON output (`output_config.format`), low effort for snappy chat, and server-side refusal fallbacks (`fallbacks: "default"`). The system prompt keeps replies kid-friendly, at the learner's HSK level, and never asks for personal data.
+
+1. Create an API key at [console.anthropic.com](https://console.anthropic.com).
+2. Set `ANTHROPIC_API_KEY` in `.env.local` (local) and in **Vercel → Settings → Environment Variables** (production), then redeploy.
+3. `GET /api/tutor` reports `{ ai: true }` once it's active; the chat header shows **AI aktif**.
+
+Cost control: each message is one API call (billed to your Anthropic account). `/api/tutor` applies a best-effort limit of 30 messages per 5 minutes per IP; for stricter limits, require sign-in or add a shared rate limiter (e.g. Upstash Redis).
 
 ---
 

@@ -2,7 +2,9 @@
 
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
-import { ArrowRight, Compass, Sparkles, TrendingDown, TrendingUp, Volume2 } from "lucide-react";
+import { ArrowRight, TrendingDown, TrendingUp, Volume2 } from "lucide-react";
+import { BooWith } from "@/components/mascot/BooWith";
+import { Sticker } from "@/components/mascot/Stickers";
 import { useUser } from "@/components/providers/UserProvider";
 import { BentoCard, Button, ProgressBar } from "@/components/ui";
 import { speakZh } from "@/lib/speech";
@@ -80,7 +82,7 @@ export function PlacementTest({ bank }: { bank: PlacementItem[] }) {
       <div className="mx-auto max-w-2xl">
         <BentoCard tone="gradient" className="p-8 text-center">
           <div className="blob -left-10 -top-10 h-40 w-40 bg-white/40" />
-          <Compass className="mx-auto h-12 w-12" />
+          <BooWith prop="star" mood="wave" size={150} float className="mx-auto" />
           <h1 className="mt-4 text-3xl font-extrabold sm:text-4xl">Tes Penempatan Adaptif</h1>
           <p className="mx-auto mt-3 max-w-md text-white/90">
             {TOTAL} soal yang menyesuaikan kemampuanmu: jawaban benar menaikkan tingkat kesulitan, jawaban salah menurunkannya.
@@ -98,7 +100,11 @@ export function PlacementTest({ bank }: { bank: PlacementItem[] }) {
     return (
       <div className="mx-auto max-w-2xl">
         <BentoCard className="p-8 text-center">
-          <Sparkles className="mx-auto h-10 w-10 text-blossom" />
+          <div className="relative mx-auto w-fit">
+            <BooWith prop="trophy" mood="happy" size={140} float />
+            <Sticker name="sparkle" size={28} className="absolute -left-8 top-4" />
+            <Sticker name="star" size={30} rotate={12} className="absolute -right-10 top-0" />
+          </div>
           <p className="mt-3 text-sm font-bold uppercase tracking-wider text-plum-soft">Rekomendasi level</p>
           <p className="text-6xl font-extrabold text-blossom">HSK {result}</p>
           <p className="mx-auto mt-3 max-w-md text-plum-soft">{LEVEL_COPY[result]}</p>

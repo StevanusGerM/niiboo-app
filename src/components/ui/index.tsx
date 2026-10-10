@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 /* ---------------------------------------------------------------- Card */
 
-type Tone = "white" | "pink" | "peach" | "rose" | "plum" | "gradient";
+type Tone = "white" | "pink" | "peach" | "rose" | "plum" | "gradient" | "mint" | "ocean" | "lilac" | "sunny";
 
 const toneClasses: Record<Tone, string> = {
   white: "bg-white text-plum",
@@ -13,6 +13,10 @@ const toneClasses: Record<Tone, string> = {
   rose: "bg-rose text-plum",
   plum: "bg-plum text-cream",
   gradient: "bg-blossom-gradient text-white",
+  mint: "bg-mint-light text-plum",
+  ocean: "bg-ocean-light text-plum",
+  lilac: "bg-lilac-light text-plum",
+  sunny: "bg-sunny-light text-plum",
 };
 
 export function BentoCard({
@@ -138,20 +142,27 @@ export function PageHeader({
   title,
   description,
   action,
+  illustration,
 }: {
   eyebrow?: string;
   title: ReactNode;
   description?: ReactNode;
   action?: ReactNode;
+  /** Cartoon shown on the right of the header (hidden on very small screens). */
+  illustration?: ReactNode;
 }) {
   return (
     <header className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
-      <div>
+      <div className="flex items-end gap-4">
+        {illustration && <div className="order-last shrink-0 sm:hidden">{illustration}</div>}
+        <div className="min-w-0 flex-1">
         {eyebrow && <p className="mb-1 text-xs font-extrabold uppercase tracking-[0.2em] text-blossom">{eyebrow}</p>}
         <h1 className="text-3xl font-extrabold tracking-tight text-plum sm:text-4xl">{title}</h1>
         {description && <p className="mt-2 max-w-2xl text-plum-soft">{description}</p>}
+        </div>
       </div>
       {action}
+      {illustration && <div className="hidden shrink-0 sm:block">{illustration}</div>}
     </header>
   );
 }

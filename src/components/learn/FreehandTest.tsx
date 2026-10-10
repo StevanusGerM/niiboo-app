@@ -158,13 +158,13 @@ export function FreehandTest({
       </div>
 
       {result !== null ? (
-        <div className={cn("mt-4 w-full rounded-3xl p-4 text-center", passed ? "bg-emerald-50" : "bg-rose/40")}>
+        <div className={cn("mt-4 w-full rounded-3xl p-4 text-center", passed ? "bg-mint-light" : "bg-rose/40")}>
           <div className="flex justify-center gap-1">
             {[1, 2, 3].map((n) => (
               <Star
                 key={n}
-                className={cn("h-7 w-7", n <= stars ? "text-peach" : "text-plum/15")}
-                fill={n <= stars ? "#FFB385" : "currentColor"}
+                className={cn("h-7 w-7", n <= stars ? "text-sunny" : "text-plum/15")}
+                fill={n <= stars ? "#FFC94A" : "currentColor"}
               />
             ))}
           </div>

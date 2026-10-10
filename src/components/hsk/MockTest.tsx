@@ -16,6 +16,9 @@ import {
   Volume2,
   XCircle,
 } from "lucide-react";
+import { Boo } from "@/components/mascot/Boo";
+import { BooWith } from "@/components/mascot/BooWith";
+import { Dragon, Sticker } from "@/components/mascot/Stickers";
 import { useUser } from "@/components/providers/UserProvider";
 import { BentoCard, Button, ButtonLink, HskBadge, ProgressBar, ProgressRing } from "@/components/ui";
 import { markNode, starsFor } from "@/lib/journey-store";
@@ -28,10 +31,13 @@ type Mode = "mock" | "practice";
 type Answer = number | number[]; // option index (mcq) or fragment order (order)
 type Phase = "intro" | "running" | "result";
 
-const SECTION_META: Record<SectionType, { label: string; zh: string; icon: typeof Headphones; secondsPerQ: number }> = {
-  listening: { label: "Mendengar", zh: "听力", icon: Headphones, secondsPerQ: 60 },
-  reading: { label: "Membaca", zh: "阅读", icon: BookOpen, secondsPerQ: 75 },
-  writing: { label: "Menulis", zh: "书写", icon: PenLine, secondsPerQ: 90 },
+const SECTION_META: Record<
+  SectionType,
+  { label: string; zh: string; icon: typeof Headphones; secondsPerQ: number; color: string; ring: string; tone: "ocean" | "lilac" | "mint" }
+> = {
+  listening: { label: "Mendengar", zh: "听力", icon: Headphones, secondsPerQ: 60, color: "text-ocean-dark", ring: "#5AB4F5", tone: "ocean" },
+  reading: { label: "Membaca", zh: "阅读", icon: BookOpen, secondsPerQ: 75, color: "text-lilac-dark", ring: "#A78BFA", tone: "lilac" },
+  writing: { label: "Menulis", zh: "书写", icon: PenLine, secondsPerQ: 90, color: "text-mint-dark", ring: "#3CCFA4", tone: "mint" },
 };
 const MAX_LISTENS = 2;
 
@@ -177,11 +183,16 @@ export function MockTest({ level, sections, mode }: { level: number; sections: H
         </Link>
         <BentoCard tone="gradient" className="p-8">
           <div className="blob -right-10 -top-10 h-48 w-48 bg-white/40" />
+          {mode === "mock" ? (
+            <Dragon size={130} mood="fierce" float className="pointer-events-none absolute -bottom-3 right-3 hidden sm:block" />
+          ) : (
+            <BooWith prop="pencil" mood="happy" size={120} float className="pointer-events-none absolute bottom-2 right-6 hidden sm:block" />
+          )}
           <HskBadge level={level} className="bg-white/80" />
           <h1 className="mt-4 text-3xl font-extrabold sm:text-4xl">
             {mode === "mock" ? `Simulasi Ujian HSK ${level}` : `Bank Latihan HSK ${level}`}
           </h1>
-          <p className="mt-2 max-w-lg text-white/90">
+          <p className="mt-2 max-w-lg text-white/90 sm:pr-32">
             {mode === "mock"
               ? "Kerjakan seperti ujian sungguhan: setiap bagian memiliki batas waktu dan audio hanya bisa diputar dua kali."
               : "Tanpa batas waktu. Periksa setiap jawaban dan pelajari penjelasannya langsung."}
@@ -191,8 +202,8 @@ export function MockTest({ level, sections, mode }: { level: number; sections: H
           {sections.map((s) => {
             const m = SECTION_META[s.section_type];
             return (
-              <BentoCard key={s.id}>
-                <m.icon className="h-6 w-6 text-blossom" />
+              <BentoCard key={s.id} tone={m.tone}>
+                <m.icon className={cn("h-6 w-6", m.color)} />
                 <p className="mt-3 text-lg font-extrabold">
                   {m.label} <span className="font-hanzi text-plum-soft">{m.zh}</span>
                 </p>
@@ -217,6 +228,15 @@ export function MockTest({ level, sections, mode }: { level: number; sections: H
       <div className="mx-auto max-w-4xl">
         <div className="grid gap-4 md:grid-cols-[1.2fr_1fr]">
           <BentoCard tone={results.passed ? "gradient" : "plum"} className="p-8">
+            <div className="pointer-events-none absolute -bottom-2 right-3 hidden sm:block">
+              {results.passed ? <BooWith prop="trophy" mood="happy" size={130} float /> : <Boo mood="sad" size={120} />}
+            </div>
+            {results.passed && (
+              <>
+                <Sticker name="sparkle" size={28} className="pointer-events-none absolute right-40 top-8 hidden sm:block" />
+                <Sticker name="star" size={36} rotate={14} className="pointer-events-none absolute right-6 top-6 hidden sm:block" />
+              </>
+            )}
             <Trophy className="h-8 w-8" />
             <p className="mt-3 text-sm font-bold uppercase tracking-wider opacity-80">Hasil HSK {level}</p>
             <p className="text-5xl font-extrabold">
@@ -234,8 +254,8 @@ export function MockTest({ level, sections, mode }: { level: number; sections: H
               const pct = s.total ? Math.round((s.correct / s.total) * 100) : 0;
               return (
                 <div key={s.type} className="flex items-center gap-4">
-                  <ProgressRing value={pct} size={56} stroke={6}>
-                    <m.icon className="h-4 w-4 text-blossom" />
+                  <ProgressRing value={pct} size={56} stroke={6} color={m.ring}>
+                    <m.icon className={cn("h-4 w-4", m.color)} />
                   </ProgressRing>
                   <div className="flex-1">
                     <p className="font-extrabold">{m.label}</p>
@@ -258,7 +278,7 @@ export function MockTest({ level, sections, mode }: { level: number; sections: H
                 <BentoCard key={q.id} className="p-5">
                   <div className="flex items-start gap-3">
                     {ok ? (
-                      <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-emerald-500" />
+                      <CheckCircle2 className="mt-0.5 h-6 w-6 shrink-0 text-mint" />
                     ) : (
                       <XCircle className="mt-0.5 h-6 w-6 shrink-0 text-blossom" />
                     )}
@@ -271,12 +291,12 @@ export function MockTest({ level, sections, mode }: { level: number; sections: H
                         <p className="mt-1 font-hanzi text-lg">{q.passage_zh ?? q.audio_text}</p>
                       )}
                       <p className="mt-2 text-sm">
-                        Jawabanmu: <span className={cn("font-hanzi font-bold", ok ? "text-emerald-600" : "text-blossom")}>{answerText(q, answers[q.id])}</span>
+                        Jawabanmu: <span className={cn("font-hanzi font-bold", ok ? "text-mint-dark" : "text-blossom")}>{answerText(q, answers[q.id])}</span>
                       </p>
                       {!ok && (
                         <p className="text-sm">
                           Jawaban benar:{" "}
-                          <span className="font-hanzi font-bold text-emerald-600">
+                          <span className="font-hanzi font-bold text-mint-dark">
                             {q.kind === "mcq" ? q.options[q.answer] : q.answer}
                           </span>
                         </p>
@@ -316,7 +336,7 @@ export function MockTest({ level, sections, mode }: { level: number; sections: H
       {/* Exam header */}
       <div className="sticky top-[68px] z-20 mb-4 rounded-full bg-white/95 p-2 pl-4 shadow-soft ring-1 ring-plum/5 backdrop-blur">
         <div className="flex items-center gap-3">
-          <meta.icon className="h-5 w-5 shrink-0 text-blossom" />
+          <meta.icon className={cn("h-5 w-5 shrink-0", meta.color)} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-extrabold">
               {meta.label} <span className="font-hanzi text-plum-soft">{meta.zh}</span> · {qIdx + 1}/{questions.length}
@@ -395,7 +415,7 @@ export function MockTest({ level, sections, mode }: { level: number; sections: H
                   className={cn(
                     "flex items-center gap-3 rounded-3xl border-2 p-4 text-left font-semibold transition",
                     right
-                      ? "border-emerald-500 bg-emerald-50"
+                      ? "border-mint bg-mint-light"
                       : wrong
                         ? "border-blossom bg-rose/40"
                         : selected
@@ -433,7 +453,7 @@ export function MockTest({ level, sections, mode }: { level: number; sections: H
           <div
             className={cn(
               "mt-5 rounded-3xl p-4 text-sm",
-              isCorrect(question, answer) ? "bg-emerald-50 text-emerald-900" : "bg-rose/40 text-plum",
+              isCorrect(question, answer) ? "bg-mint-light text-plum" : "bg-rose/40 text-plum",
             )}
           >
             <p className="font-extrabold">

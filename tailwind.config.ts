@@ -10,6 +10,11 @@ const config: Config = {
         rose: "#FFD1DC",
         plum: { DEFAULT: "#2B2D42", soft: "#5C5F7A" },
         cream: "#F9F8F6",
+        // Supporting palette — used for categories, rewards and success states.
+        mint: { DEFAULT: "#3CCFA4", dark: "#22A882", light: "#D7F7EC" }, // success · writing · Hanzi
+        ocean: { DEFAULT: "#5AB4F5", dark: "#2F8FD6", light: "#DDEFFD" }, // listening · info · practice
+        lilac: { DEFAULT: "#A78BFA", dark: "#7C5CE8", light: "#EDE7FF" }, // reading · stories
+        sunny: { DEFAULT: "#FFC94A", dark: "#E9A825", light: "#FFF3CF" }, // stars · XP · rewards
       },
       fontFamily: {
         sans: ["var(--font-sans)", "system-ui", "sans-serif"],
@@ -27,6 +32,10 @@ const config: Config = {
         "chunky-pink": "0 5px 0 0 #D9435F",
         "chunky-plum": "0 5px 0 0 #15161F",
         "chunky-white": "0 5px 0 0 rgba(43, 45, 66, 0.15)",
+        "chunky-mint": "0 5px 0 0 #22A882",
+        "chunky-ocean": "0 5px 0 0 #2F8FD6",
+        "chunky-lilac": "0 5px 0 0 #7C5CE8",
+        "chunky-sunny": "0 5px 0 0 #E9A825",
       },
       backgroundImage: {
         "blossom-gradient": "linear-gradient(135deg, #FF6584 0%, #FFB385 100%)",

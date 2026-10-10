@@ -25,14 +25,19 @@ export interface ToneNote {
 export interface TutorResponse {
   reply: Line;
   feedback: {
-    kind: "praise" | "hint" | "tone";
+    kind: "praise" | "hint" | "tone" | "grammar";
     text: string;
     toned?: string; // learner's sentence with correct tone marks
     notes?: ToneNote[];
     suggestion?: Line;
   } | null;
+  /** Indonesian explanation (AI mode). */
+  note?: string;
+  /** Quick replies the learner can tap (AI mode). */
+  suggestions?: string[];
   nextStep: number;
   done: boolean;
+  engine: "ai" | "simulated";
 }
 
 /** Mini lexicon for tone feedback: correct marked pinyin → hanzi + meaning. */
@@ -104,16 +109,6 @@ const PRAISE = ["很好！Bagus sekali!", "太棒了！Hebat!", "对！Benar!", 
 
 export function generateTutorReply(req: TutorRequest): TutorResponse {
   const scenario = getScenario(req.scenarioId);
-  if (!scenario) {
-    return {
-      reply: { zh: "对不起，我不明白。", pinyin: "Duìbuqǐ, wǒ bù míngbai.", id: "Maaf, saya tidak mengerti." },
-      feedback: null,
-      nextStep: 0,
-      done: true,
-    };
-  }
-
-  const step = scenario.steps[req.step];
   const message = req.message.trim();
   const isPinyin = LATIN.test(message) && !HANZI.test(message);
 
@@ -136,8 +131,24 @@ export function generateTutorReply(req: TutorRequest): TutorResponse {
     }
   }
 
+  if (!scenario) {
+    // Free chat needs the AI engine; the simulation can still check tones.
+    return {
+      reply: {
+        zh: "我还在学习自由聊天哦！",
+        pinyin: "Wǒ hái zài xuéxí zìyóu liáotiān o!",
+        id: "Ngobrol bebas butuh AI yang aktif (ANTHROPIC_API_KEY). Sementara itu, coba skenario roleplay, ya!",
+      },
+      feedback: toneFeedback,
+      nextStep: req.step,
+      done: false,
+      engine: "simulated",
+    };
+  }
+
+  const step = scenario.steps[req.step];
   if (!step) {
-    return { reply: scenario.closing, feedback: toneFeedback, nextStep: req.step, done: true };
+    return { reply: scenario.closing, feedback: toneFeedback, nextStep: req.step, done: true, engine: "simulated" };
   }
 
   if (matchesExpectation(message, step.expect)) {
@@ -148,6 +159,7 @@ export function generateTutorReply(req: TutorRequest): TutorResponse {
       feedback: toneFeedback ?? { kind: "praise", text: PRAISE[req.step % PRAISE.length] },
       nextStep: next,
       done,
+      engine: "simulated",
     };
   }
 
@@ -160,5 +172,6 @@ export function generateTutorReply(req: TutorRequest): TutorResponse {
     },
     nextStep: req.step,
     done: false,
+    engine: "simulated",
   };
 }

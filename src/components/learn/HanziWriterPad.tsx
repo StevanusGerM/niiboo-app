@@ -226,13 +226,13 @@ export function HanziWriterPad({ vocab, initialMode = "watch" }: { vocab: VocabI
                       {[1, 2, 3].map((n) => (
                         <Star
                           key={n}
-                          className={cn("h-2.5 w-2.5", n <= stars ? "text-peach" : c === char ? "text-white/30" : "text-plum/15")}
+                          className={cn("h-2.5 w-2.5", n <= stars ? "text-sunny" : c === char ? "text-white/30" : "text-plum/15")}
                           fill="currentColor"
                         />
                       ))}
                     </span>
                     {rec?.practiced && (
-                      <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-emerald-500 text-white">
+                      <span className="absolute -right-1 -top-1 grid h-4 w-4 place-items-center rounded-full bg-mint-light0 text-white">
                         <Check className="h-3 w-3" strokeWidth={3} />
                       </span>
                     )}

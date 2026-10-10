@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HskHub } from "@/components/hsk/HskHub";
+import { Dragon } from "@/components/mascot/Stickers";
 import { PageHeader } from "@/components/ui";
 import { getAllExams } from "@/lib/data";
 
@@ -15,7 +16,8 @@ export default async function HskPage() {
       <PageHeader
         eyebrow="HSK Prep"
         title="Pusat Persiapan HSK"
-        description="Simulasi ujian bertimer untuk bagian Mendengar, Membaca, dan Menulis — plus bank latihan dengan pembahasan lengkap."
+        description="Simulasi ujian bertimer untuk bagian Mendengar, Membaca, dan Menulis — plus bank latihan dengan pembahasan lengkap. Kalahkan Xiao Long si naga di setiap level!"
+        illustration={<Dragon size={110} mood="fierce" float />}
       />
       <HskHub counts={counts} />
     </>

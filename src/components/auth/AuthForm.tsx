@@ -243,8 +243,8 @@ export function AuthForm({ mode }: { mode: Mode }) {
             }
           />
           {mode === "signup" && (
-            <p className={cn("flex items-center gap-1.5 pl-1 text-sm font-bold", pwOk ? "text-emerald-600" : "text-plum-soft")}>
-              <span className={cn("grid h-5 w-5 place-items-center rounded-full", pwOk ? "bg-emerald-500 text-white" : "bg-plum/10")}>
+            <p className={cn("flex items-center gap-1.5 pl-1 text-sm font-bold", pwOk ? "text-mint-dark" : "text-plum-soft")}>
+              <span className={cn("grid h-5 w-5 place-items-center rounded-full", pwOk ? "bg-mint-light0 text-white" : "bg-plum/10")}>
                 {pwOk && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
               </span>
               Minimal 6 karakter

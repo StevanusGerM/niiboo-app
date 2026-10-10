@@ -15,7 +15,7 @@ const DAYS_AHEAD = 10;
 
 const STATUS: Record<BookingStatus, { label: string; cls: string }> = {
   pending: { label: "Menunggu konfirmasi", cls: "bg-peach/30 text-plum" },
-  confirmed: { label: "Terkonfirmasi", cls: "bg-emerald-100 text-emerald-800" },
+  confirmed: { label: "Terkonfirmasi", cls: "bg-mint-light text-mint-dark" },
   completed: { label: "Selesai", cls: "bg-plum/10 text-plum-soft" },
   cancelled: { label: "Dibatalkan", cls: "bg-plum/5 text-plum-soft line-through" },
 };
@@ -141,7 +141,7 @@ export function BookingPanel() {
                     <p className="truncate text-sm font-semibold text-plum-soft">{e.title}</p>
                     {e.rating !== undefined && (
                       <p className="mt-0.5 inline-flex items-center gap-1 text-sm font-bold">
-                        <Star className="h-4 w-4 text-peach" fill="#FFB385" /> {e.rating}
+                        <Star className="h-4 w-4 text-sunny" fill="#FFC94A" /> {e.rating}
                         {e.sessions !== undefined && ` · ${e.sessions.toLocaleString("id-ID")} sesi`}
                       </p>
                     )}
@@ -248,7 +248,7 @@ export function BookingPanel() {
             </button>
           )}
           {message && (
-            <p className={cn("mt-3 rounded-2xl px-3 py-2 text-sm font-semibold", message.ok ? "bg-emerald-100 text-emerald-900" : "bg-rose text-blossom-dark")}>
+            <p className={cn("mt-3 rounded-2xl px-3 py-2 text-sm font-semibold", message.ok ? "bg-mint-light text-plum" : "bg-rose text-blossom-dark")}>
               {message.text}
             </p>
           )}

@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { Check, PartyPopper, RotateCcw, Volume2 } from "lucide-react";
+import { Check, RotateCcw, Volume2 } from "lucide-react";
+import { BooWith } from "@/components/mascot/BooWith";
+import { Sticker } from "@/components/mascot/Stickers";
 import { useUser } from "@/components/providers/UserProvider";
 import { BentoCard, Button, ProgressBar } from "@/components/ui";
 import { speakZh } from "@/lib/speech";
@@ -51,7 +53,11 @@ export function Flashcards({ lesson }: { lesson: Lesson }) {
   if (!card) {
     return (
       <BentoCard tone="gradient" className="p-8 text-center">
-        <PartyPopper className="mx-auto h-12 w-12" />
+        <div className="relative mx-auto w-fit">
+          <BooWith prop="star" mood="happy" size={130} float />
+          <Sticker name="heart" size={34} rotate={-12} className="absolute -left-10 top-2" />
+          <Sticker name="sparkle" size={26} className="absolute -right-8 top-8" />
+        </div>
         <p className="mt-3 text-3xl font-extrabold">Pelajaran selesai!</p>
         <p className="mt-1 text-white/90">
           Skor: {score}% · {vocab.length - missed.size} dari {vocab.length} kata langsung hafal

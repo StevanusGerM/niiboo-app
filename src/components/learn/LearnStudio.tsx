@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { CheckCircle2, Layers, Lightbulb, Mic, PenTool } from "lucide-react";
 import { useUser } from "@/components/providers/UserProvider";
+import { BooWith } from "@/components/mascot/BooWith";
 import { BentoCard, PageHeader } from "@/components/ui";
 import { HSK_LEVELS, cn } from "@/lib/utils";
 import type { Lesson } from "@/types/database";
@@ -51,6 +52,7 @@ export function LearnStudio({
         eyebrow="Kurikulum terstruktur"
         title="Pelajaran harian"
         description="Hafalkan kosakata, kuasai urutan goresan, dan latih pelafalan dengan pengenalan suara."
+        illustration={<BooWith prop="pencil" mood="happy" size={110} />}
       />
 
       {/* Level switcher */}
