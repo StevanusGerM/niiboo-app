@@ -44,16 +44,119 @@ export function isRecognitionSupported() {
   return typeof window !== "undefined" && !!(window.SpeechRecognition ?? window.webkitSpeechRecognition);
 }
 
+/**
+ * Mandarin recogniser. Interim results are on because iOS Safari sometimes ends
+ * the session without ever marking a result as final — callers should keep the
+ * latest transcript and score it on `onend` if no final result arrived.
+ */
 export function createRecognizer(): SpeechRecognition | null {
   if (typeof window === "undefined") return null;
   const Ctor = window.SpeechRecognition ?? window.webkitSpeechRecognition;
   if (!Ctor) return null;
   const rec = new Ctor();
   rec.lang = "zh-CN";
-  rec.interimResults = false;
+  rec.interimResults = true;
   rec.continuous = false;
   rec.maxAlternatives = 3;
   return rec;
+}
+
+export function isIOS() {
+  if (typeof navigator === "undefined") return false;
+  return /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+}
+
+/** Browsers embedded in chat/social apps usually block the mic and speech APIs. */
+export function isInAppBrowser() {
+  if (typeof navigator === "undefined") return false;
+  return /FBAN|FBAV|Instagram|Line\/|WhatsApp|Twitter|TikTok|musical_ly|Snapchat/i.test(navigator.userAgent);
+}
+
+export interface SpeechProblem {
+  title: string;
+  steps: string[];
+  /** Offer a button that asks for microphone permission directly. */
+  canRequestMic: boolean;
+}
+
+/** Friendly, device-aware explanation for a SpeechRecognition error code. */
+export function explainSpeechError(code: string): SpeechProblem {
+  const ios = isIOS();
+  switch (code) {
+    case "not-allowed":
+      return {
+        title: "Mikrofon belum diizinkan",
+        steps: ios
+          ? [
+              "Ketuk tombol “Izinkan mikrofon” di bawah, lalu pilih Izinkan.",
+              "Kalau tidak muncul: ketuk ikon “aA” di bilah alamat Safari › Pengaturan Situs Web › Mikrofon › Izinkan.",
+              "Atau buka Pengaturan iPhone › Safari › Mikrofon › Izinkan.",
+            ]
+          : ["Ketuk tombol “Izinkan mikrofon” di bawah.", "Atau ketuk ikon gembok di bilah alamat › Izin › Mikrofon › Izinkan."],
+        canRequestMic: true,
+      };
+    case "service-not-allowed":
+      return {
+        title: ios ? "Dikte iPhone belum aktif" : "Layanan pengenalan suara diblokir",
+        steps: ios
+          ? [
+              "Buka Pengaturan › Umum › Keyboard › aktifkan “Aktifkan Dikte”.",
+              "Di menu yang sama, tambahkan keyboard “Chinese, Simplified” (Mandarin) agar Dikte mengenali bahasa Mandarin.",
+              "Pastikan juga Pengaturan › Durasi Layar › Batasan Konten & Privasi tidak memblokir Siri & Dikte.",
+              "Kembali ke sini lalu ketuk mic lagi.",
+            ]
+          : ["Browser ini tidak mengizinkan pengenalan suara. Coba Google Chrome versi terbaru."],
+        canRequestMic: !ios,
+      };
+    case "language-not-supported":
+      return {
+        title: "Bahasa Mandarin belum tersedia untuk pengenalan suara",
+        steps: ios
+          ? ["Tambahkan keyboard “Chinese, Simplified”: Pengaturan › Umum › Keyboard › Keyboard › Tambah Keyboard Baru.", "Lalu coba lagi."]
+          : ["Coba Google Chrome versi terbaru dengan koneksi internet."],
+        canRequestMic: false,
+      };
+    case "audio-capture":
+      return {
+        title: "Mikrofon tidak terdeteksi",
+        steps: ["Pastikan tidak ada aplikasi lain (telepon, rekam suara) yang sedang memakai mikrofon.", "Lepas lalu pasang lagi earphone, kemudian coba lagi."],
+        canRequestMic: true,
+      };
+    case "network":
+      return {
+        title: "Butuh koneksi internet",
+        steps: ["Pengenalan suara memakai layanan online. Periksa koneksi internet, lalu coba lagi."],
+        canRequestMic: false,
+      };
+    case "no-speech":
+      return {
+        title: "Suaramu belum terdengar",
+        steps: ["Ketuk mic, tunggu sebentar, lalu ucapkan kata dengan jelas dan agak keras."],
+        canRequestMic: false,
+      };
+    default:
+      return {
+        title: "Pengenalan suara terhenti",
+        steps: ["Ketuk mic dan coba lagi."],
+        canRequestMic: false,
+      };
+  }
+}
+
+/** Ask for microphone access explicitly (must be called from a tap). */
+export async function requestMicPermission(): Promise<boolean> {
+  if (typeof navigator === "undefined" || !navigator.mediaDevices?.getUserMedia) return false;
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach((t) => t.stop());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export function isRecordingSupported() {
+  return typeof window !== "undefined" && !!navigator.mediaDevices?.getUserMedia && typeof window.MediaRecorder !== "undefined";
 }
 
 /** Character-level similarity (0–100) between target hanzi and a transcript. */

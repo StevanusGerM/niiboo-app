@@ -7,7 +7,7 @@ import { BooWith } from "@/components/mascot/BooWith";
 import { Sticker } from "@/components/mascot/Stickers";
 import { useUser } from "@/components/providers/UserProvider";
 import { BentoCard, Button, HskBadge, PageHeader } from "@/components/ui";
-import { createRecognizer, isRecognitionSupported, speakZh } from "@/lib/speech";
+import { createRecognizer, explainSpeechError, isRecognitionSupported, speakZh } from "@/lib/speech";
 import { scenarios, type Line } from "@/lib/tutor/scenarios";
 import type { TutorResponse } from "@/lib/tutor/engine";
 import { cn } from "@/lib/utils";
@@ -129,11 +129,20 @@ export function TutorChat() {
   const dictate = () => {
     const rec = createRecognizer();
     if (!rec) return;
-    rec.onresult = (e) => setInput(e.results[0][0].transcript);
+    rec.onresult = (e) => setInput(e.results[e.results.length - 1][0].transcript);
     rec.onend = () => setRecording(false);
-    rec.onerror = () => setRecording(false);
+    rec.onerror = (e) => {
+      setRecording(false);
+      if (e.error === "aborted" || e.error === "no-speech") return;
+      const p = explainSpeechError(e.error);
+      setMessages((m) => [...m, { role: "ai", line: { zh: "🎙️", pinyin: "", id: `${p.title}. ${p.steps[0]}` } }]);
+    };
     setRecording(true);
-    rec.start();
+    try {
+      rec.start();
+    } catch {
+      setRecording(false);
+    }
   };
 
   const lastAiIndex = messages.map((m) => m.role).lastIndexOf("ai");
